@@ -1,0 +1,33 @@
+# RewriteEngine On
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteRule ^ index.html [QSA,L]
+
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+    
+  # Redirecionamento do React
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^ index.html [QSA,L]
+    
+  # Servir arquivos .gz se disponíveis
+  RewriteCond %{HTTP_ACCEPT_ENCODING} gzip
+  RewriteCond %{REQUEST_FILENAME} \.(js|css|html|json|svg|txt)$
+  RewriteCond %{REQUEST_FILENAME}.gz -f
+  RewriteRule ^(.*)$ $1.gz [QSA,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Ajustar os cabeçalhos para arquivos Gzip
+  <FilesMatch "\.gz$">
+    Header set Content-Encoding gzip
+
+    # Definir o Content-Type correto com base no tipo de arquivo
+    SetEnvIfNoCase Request_URI \.js\.gz$ Content-Type=application/javascript
+    SetEnvIfNoCase Request_URI \.css\.gz$ Content-Type=text/css
+    SetEnvIfNoCase Request_URI \.html\.gz$ Content-Type=text/html
+    SetEnvIfNoCase Request_URI \.json\.gz$ Content-Type=application/json
+    SetEnvIfNoCase Request_URI \.svg\.gz$ Content-Type=image/svg+xml
+    Header set Content-Type "%{Content-Type}e" env=Content-Type
+  </FilesMatch>
+</IfModule>

@@ -1,35 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { ConfigProvider } from "antd";
+import locale from "antd/lib/locale/pt_BR";
+import { Route, BrowserRouter as Router, Switch } from "react-router-dom";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+import SignReceita from "./pages/ValidaSignDocs";
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+// Componente principal que irá conter todo o App
+const App = () => {
+    return (
 
-export default App
+        // Componente de roteamento
+        <Router>
+
+            {/* Componente de linguagem da biblioteca ANTD */}
+            <ConfigProvider locale={locale}>
+
+                {/* Componente de troca de rotas */}
+                <Switch>
+
+                    {/* Define as rotas que serão renderizadas sem o layout com menu */}
+                    <Route path="/receita" exact component={SignReceita} />
+
+
+                </Switch>
+
+            </ConfigProvider>
+
+            <Route path="/receita" exact component={Login} />
+
+        </Router>
+    );
+};
+
+export default App;

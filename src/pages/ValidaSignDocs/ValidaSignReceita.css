@@ -1,53 +1,32 @@
-.login-form {
-  width: 400px;
-  max-width: 300px; 
-  padding: 20px 40px;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 10px 25px 35px 10px rgba(0, 0, 0, 0.7);
-  -webkit-box-shadow: 15px 20px 20px 10px rgba(0, 0, 0, 0.3);
+.background-full {
+    background-color: #0a2556b8;
+    min-height: 100vh;
 }
 
-.login-form-forgot {
-  float: right;
+.container-form {
+    display: grid;
+    justify-content: center; /* Centraliza horizontalmente */
+    align-items: center; /* Centraliza verticalmente */
+    height: 100vh;
 }
 
-.ant-col-rtl .login-form-forgot {
-  float: left;
+.form {
+    width: 400px;
+    max-width: 300px;
+    padding: 20px 40px;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 10px 25px 35px 10px rgba(0, 0, 0, 0.7);
+    -webkit-box-shadow: 15px 20px 20px 10px rgba(0, 0, 0, 0.3);
+    /* Ocupa 100% da altura da viewport */
 }
 
-.login-form-button {
-  width: 100%;
-  height: 45px;
-  border-radius: 5px;
+.form-forgot {
+    float: right;
 }
 
-.container-login {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  height: 100vh;
+.btnOpcoes {
+    width: 100%;
+    border: 0.5px solid rgba(10, 33, 162, 0.493);
 }
 
-hr {
-  border-color: rgba(5, 97, 216, 0.266);
-  margin-top: 5px;
-  margin-bottom: 5px
-}
-
-
-.my-node-enter {
-  opacity: 0;
-}
-.my-node-enter-active {
-  opacity: 1;
-  transition: opacity 500ms ease-in;
-}
-.my-node-exit {
-  opacity: 1;
-}
-.my-node-exit-active {
-  opacity: 0;
-  transition: opacity 500ms ease-in;
-}

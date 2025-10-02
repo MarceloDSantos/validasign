@@ -1,5 +1,14 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Alert, Button, Col, Form, Input, Row, Spin, Card } from "antd";
+import { Alert, Button, Col, Form, Input, Row, Card, Tooltip } from "antd";
+import {
+    PrinterOutlined,
+    SignatureOutlined,
+    CloudDownloadOutlined,
+    FileProtectOutlined,
+    CloseCircleOutlined,
+    QuestionCircleOutlined,
+} from "@ant-design/icons";
+import { validationMessages } from "../../helpers/CustomValidations";
 
 // import axios from "axios";
 // import api from "../../api";
@@ -7,123 +16,240 @@ import { Alert, Button, Col, Form, Input, Row, Spin, Card } from "antd";
 import amparaLogo from "../../images/ampara-logo-transparente.png";
 import { NOME_SISTEMA, VERSAO_SISTEMA } from "../../helpers/Constants";
 
-// import "ValidaSignDocs/ValidaSignRceita.css";
+import "./ValidaSignReceita.css";
 import "../Animacoes.css";
 
 // Inicia a Página/Componente
 const ValidaSignReceita = () => {
     // const { handleLogout } = useContext(Context);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [loadingBaixar, setLoadingBaixar] = useState(false);
+    const [loadingImprimir, setLoadingImprimi] = useState(false);
+    const [loadingValidar, setLoadingValidar] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
     const [alertType, setAlertType] = useState("error");
+    const [value, setValue] = useState("");
+
     const [form] = Form.useForm();
 
-    // Executa no primeiro render do componente
-    // useEffect(() => {
-    //     setAlertMessage("");
-    //     setLoading(true);
+    const onFinishForm = (value) => {
+        if (value.token === isEmpty || value.token === undefined) {
+            return;
+        }
+    };
 
-    //     // Consome a API para alterar a senha
-    //     api.get("/usuario/obter-email-usuario")
-    //         .then((response) => {
-    //             const { data } = response;
-
-    //             if (data.codResp > 0) {
-    //                 // Dados de busca para a primeira chamada ao carregar a página
-    //                 initialValues.emailAtual = data.email;
-
-    //                 // Passa os dados para o form
-    //                 form.setFieldsValue(initialValues);
-
-    //                 setLoading(false);
-    //             } else {
-    //                 setAlertType("error");
-    //                 setAlertMessage(data.msgResp);
-    //                 setLoading(false);
-    //             }
-    //         })
-    //         .catch((error) => {
-    //             if (axios.isCancel(error)) return;
-
-    //             setAlertType("error");
-    //             const { response } = error;
-
-    //             if (response) {
-    //                 const { data } = response;
-
-    //                 if (response.status === 401) {
-    //                     handleLogout();
-    //                 } else if (data && data.msgResp) {
-    //                     if (data.validacoes) {
-    //                         data.validacoes.map((validacao) => {
-    //                             return form.setFields([
-    //                                 {
-    //                                     name: validacao.campo.split("."),
-    //                                     errors: [validacao.validacao],
-    //                                 },
-    //                             ]);
-    //                         });
-    //                     }
-
-    //                     setAlertMessage(data.msgResp);
-    //                 } else {
-    //                     setAlertMessage("Falha ao processar requisição");
-    //                 }
-    //             } else {
-    //                 setAlertMessage("Falha ao realizar requisição");
-    //             }
-
-    //             setLoading(false);
-    //         });
-
-    //     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, []);
+    const normalizeAlphaNumeric = (value) => {
+        if (!value) {
+            return value;
+        }
+        // Remove caracterer dif de letras e números
+        return value.replace(/[^a-zA-Z0-9]/g, "");
+    };
 
     return (
-        <div className="container-login background-begin">
-            {/* Exibe Loading */}
-            <Spin spinning={loading}>
-                {/* Exibe o alerta/mensagem caso possua mensagem definida  */}
-                {alertMessage && (
-                    <>
-                        <Alert
-                            message={alertMessage}
-                            type={alertType}
-                            showIcon
-                        />
-                        <br />
-                    </>
-                )}
-
-                <Form
-                    form={form}
-                    name="login-form"
-                    className="login-form fadeInDown"
-                    style={{
-                        padding: "15px 30px 0px",
-                        display: alertSucesso.length > 0 ? "none" : "block",
-                    }}
-                >
-                    {/* Logo do sistema  */}
-                    <div
-                        style={{
-                            textAlign: "center",
-                            marginBottom: "0px",
-                            // display: 'grid'
-                        }}
-                    >
-                        <img src={amparaLogo} alt="" height="40px" />
-                        <br />
-                        <h2 style={{ color: "#003f78", marginTop: "2px" }}>
-                            {NOME_SISTEMA} {VERSAO_SISTEMA}
+        <>
+            <div className="background-full">
+                <div className="container-form">
+                    {/* Exibe Loading */}
+                    {/* <Spin spinning={loading}> */}
+                    {/* Exibe o alerta/mensagem caso possua mensagem definida  */}
+                    {alertMessage && (
+                        <>
+                            <Alert
+                                message={alertMessage}
+                                type={alertType}
+                                showIcon
+                            />
                             <br />
-                        </h2>
-                    </div>
+                        </>
+                    )}
 
+                    <Form
+                        form={form}
+                        name="form-validasign"
+                        layout="vertical"
+                        className="form fadeInDown"
+                        onFinish={onFinishForm}
+                    >
+                        {/* Logo do sistema  */}
+                        <div
+                            style={{
+                                textAlign: "center",
+                                marginTop: "0px",
+                            }}
+                        >
+                            <br />
+                            <span
+                                style={{
+                                    color: "#003f78",
+                                    marginTop: "2px",
+                                    fontWeight: 500,
+                                    fontSize: "0.85rem",
+                                }}
+                            >
+                                <img src={amparaLogo} alt="" height="30px" />
+                                <br />
+                                <FileProtectOutlined
+                                    style={{ fontSize: "1.5rem" }}
+                                />{" "}
+                                Validador de Receitas Digitais AMPARA
+                                <hr />
+                            </span>
+                        </div>
 
-                </Form>
-            </Spin>
-        </div>
+                        <Row gutter={12}>
+                            <Col xs={24} md={24} lg={24} xl={24}>
+                                <div
+                                    style={{
+                                        alignItems: "center",
+                                        alignContent: "center",
+                                        textAlign: "center",
+                                        width: "100%",
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            justifyContent: "center",
+                                            marginBottom: 0
+                                        }}
+                                    >
+                                        <Form.Item
+                                            name="token"
+                                            label="Informe o Token:"
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "center",
+                                                alignItems: "center",
+                                            }}
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message:
+                                                        validationMessages.required,
+                                                },
+                                            ]}
+                                            normalize={normalizeAlphaNumeric} // Somente letras números
+                                        >
+                                            <Input
+                                                autoFocus
+                                                placeholder="Token Receita"
+                                                minLength={6}
+                                                maxLength={6}
+                                                value={value}
+                                                style={{
+                                                    width: 150,
+                                                    fontSize: "1rem",
+                                                    fontWeight: 500,
+                                                    textAlign: "center",
+                                                    marginLeft: 30,
+                                                }}
+                                            />
+                                        </Form.Item>
+
+                                        <Tooltip
+                                            title="Limpar"
+                                            color={"blue"}
+                                            style={{
+                                                fontSize: "0.3rem",
+                                            }}
+                                        >
+                                            <Button
+                                                size="small"
+                                                onClick={() =>
+                                                    form.resetFields()
+                                                }
+                                                icon={<CloseCircleOutlined />}
+                                                style={{
+                                                    color: "#9c0306ff",
+                                                    fontSize: "0.9rem",
+                                                    marginTop: 37,
+                                                    border: 0,
+                                                }}
+                                            />
+                                        </Tooltip>
+                                    </div>
+
+                                    <Form.Item
+                                        style={{
+                                            marginBottom: 5,
+                                            textAlign: "center",
+                                            alignItems: "center",
+                                            alignContent: "center",
+                                        }}
+                                    >
+                                        <Button
+                                            className="btnOpcoes"
+                                            type="primary"
+                                            htmlType="submit"
+                                            loading={loadingBaixar}
+                                        >
+                                            <CloudDownloadOutlined
+                                                style={{ fontSize: "20px" }}
+                                            />{" "}
+                                            Baixar Receita PDF
+                                        </Button>
+                                    </Form.Item>
+
+                                    <Form.Item style={{ marginBottom: 5 }}>
+                                        <Button
+                                            className="btnOpcoes"
+                                            type="primary"
+                                            htmlType="submit"
+                                            loading={loadingBaixar}
+                                        >
+                                            <PrinterOutlined
+                                                style={{ fontSize: "20px" }}
+                                            />
+                                            Imprimir Receita
+                                        </Button>
+                                    </Form.Item>
+
+                                    <Form.Item style={{ marginBottom: 15 }}>
+                                        <Button
+                                            className="btnOpcoes"
+                                            type="primary"
+                                            htmlType="submit"
+                                            loading={loadingBaixar}
+                                        >
+                                            <SignatureOutlined
+                                                style={{ fontSize: "20px" }}
+                                            />
+                                            Validar Assinatura Digital
+                                        </Button>
+                                    </Form.Item>
+                                </div>
+                            </Col>
+                        </Row>
+                        <hr />
+
+                        <footer
+                            style={{
+                                height: 18,
+                                fontSize: "0.6rem",
+                                color: "#22368eff",
+                                fontFamily:
+                                    "Google San FlexGoogle Sans Flex, -apple-system, BlinkMacSystemFont, sans-serif",
+                                letterSpacing: "1px",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    width: "100%",
+                                }}
+                            >
+                                {NOME_SISTEMA} {VERSAO_SISTEMA}
+                                <a href="https://ampara.com.br/contato">
+                                    Dúvidas <QuestionCircleOutlined />
+                                </a>
+                            </div>
+                        </footer>
+                    </Form>
+                </div>
+            </div>
+        </>
     );
 };
 

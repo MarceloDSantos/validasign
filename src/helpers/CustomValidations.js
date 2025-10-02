@@ -1,6 +1,5 @@
 /* eslint-disable eqeqeq */
 import validator from 'validator';
-import api from '../api';
 import { inputType, removeMask } from '../components/Inputs/InputHelper';
 
 // Mensagens de validação
@@ -87,41 +86,6 @@ const CustomValidations = async (type, value) => {
           validated = true;
         } else {
           validatedMessage = validationMessages.maiorQueZero;
-        }
-      }
-      break;
-
-    case validationType.cpfExistente:
-      if (!value || value.length !== 14) {
-        validated = true;
-      } else {
-        try {
-          const valueApi = removeMask(inputType.cpf, value);
-          // Ajustar endpoint conforme a API em uso
-          const response = await api.get(`/pessoa/cpf-existente/${valueApi}`);
-          const { data } = response;
-
-          if (data.codResp > 0) {
-            validated = true;
-          } else {
-            validatedMessage = data.msgResp;
-          }
-        } catch (error) {
-          const { response } = error;
-
-          if (response) {
-            const { data } = response;
-
-            if (response.status === 401) {
-              validatedMessage = 'Validação não autorizada';
-            } else if (data && data.msgResp) {
-              validatedMessage = data.msgResp;
-            } else {
-              validatedMessage = 'Falha ao processar validação';
-            }
-          } else {
-            validatedMessage = 'Falha ao realizar validação';
-          }
         }
       }
       break;

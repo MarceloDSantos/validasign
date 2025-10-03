@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Alert, Button, Col, Form, Input, Row, Card, Tooltip } from "antd";
+import React, { useState } from "react";
+import { Alert, Button, Col, Form, Input, Row, Tooltip } from "antd";
 import {
     PrinterOutlined,
     SignatureOutlined,
@@ -9,6 +9,7 @@ import {
     QuestionCircleOutlined,
 } from "@ant-design/icons";
 import { validationMessages } from "../../helpers/CustomValidations";
+import { isMobile } from "../../helpers/FuncoesExtras";
 
 // import axios from "axios";
 // import api from "../../api";
@@ -19,6 +20,14 @@ import { NOME_SISTEMA, VERSAO_SISTEMA } from "../../helpers/Constants";
 import "./ValidaSignReceita.css";
 import "../Animacoes.css";
 
+
+
+
+// const isMobile = () => {
+//       const userAgent = navigator.userAgent;
+//       return /Mobi|Android|iPhone|iPad|iPod/i.test(userAgent);
+//     };
+
 // Inicia a Página/Componente
 const ValidaSignReceita = () => {
     // const { handleLogout } = useContext(Context);
@@ -28,15 +37,13 @@ const ValidaSignReceita = () => {
     const [loadingValidar, setLoadingValidar] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
     const [alertType, setAlertType] = useState("error");
+    const [acaoBotao, setAcaoBotao] = useState(0);
+
+    const [dispositivoMovel, setDispositivoMovel] = React.useState(isMobile());
+
     const [value, setValue] = useState("");
 
     const [form] = Form.useForm();
-
-    const onFinishForm = (value) => {
-        if (value.token === isEmpty || value.token === undefined) {
-            return;
-        }
-    };
 
     const normalizeAlphaNumeric = (value) => {
         if (!value) {
@@ -45,6 +52,19 @@ const ValidaSignReceita = () => {
         // Remove caracterer dif de letras e números
         return value.replace(/[^a-zA-Z0-9]/g, "");
     };
+
+    const onFinishForm = (value) => {
+        if (value.token.trim().length === 0 || value.token === undefined) {
+            return;
+        }
+        // Baixar
+        if (acaoBotao === 1) {
+            console.log("Baixar");
+        } else if (acaoBotao === 2) {
+            console.log("Imprimir");
+        } else console.log("Validar");
+    };
+
 
     return (
         <>
@@ -70,7 +90,7 @@ const ValidaSignReceita = () => {
                         layout="vertical"
                         className="form fadeInDown"
                         onFinish={onFinishForm}
-                    >
+                     >
                         {/* Logo do sistema  */}
                         <div
                             style={{
@@ -97,6 +117,7 @@ const ValidaSignReceita = () => {
                             </span>
                         </div>
 
+                        {/* Botões de Opções */}
                         <Row gutter={12}>
                             <Col xs={24} md={24} lg={24} xl={24}>
                                 <div
@@ -107,11 +128,12 @@ const ValidaSignReceita = () => {
                                         width: "100%",
                                     }}
                                 >
+                                    {/* Input Token */}
                                     <div
                                         style={{
                                             display: "flex",
                                             justifyContent: "center",
-                                            marginBottom: 0
+                                            marginBottom: 0,
                                         }}
                                     >
                                         <Form.Item
@@ -133,7 +155,7 @@ const ValidaSignReceita = () => {
                                         >
                                             <Input
                                                 autoFocus
-                                                placeholder="Token Receita"
+                                                placeholder="Token da Receita"
                                                 minLength={6}
                                                 maxLength={6}
                                                 value={value}
@@ -165,11 +187,15 @@ const ValidaSignReceita = () => {
                                                     fontSize: "0.9rem",
                                                     marginTop: 37,
                                                     border: 0,
+                                                    textAlign: "center",
+                                                    justifyContent: "center",
+                                                    alignItems: "center",
                                                 }}
                                             />
                                         </Tooltip>
                                     </div>
 
+                                    {/* Baixar Receita */}
                                     <Form.Item
                                         style={{
                                             marginBottom: 5,
@@ -182,7 +208,9 @@ const ValidaSignReceita = () => {
                                             className="btnOpcoes"
                                             type="primary"
                                             htmlType="submit"
+                                            name="btnBaixar"
                                             loading={loadingBaixar}
+                                            onClick={() => setAcaoBotao(1)}
                                         >
                                             <CloudDownloadOutlined
                                                 style={{ fontSize: "20px" }}
@@ -191,12 +219,21 @@ const ValidaSignReceita = () => {
                                         </Button>
                                     </Form.Item>
 
-                                    <Form.Item style={{ marginBottom: 5 }}>
+                                    {/* Imprimir Receita */}
+                                    <Form.Item
+                                        style={{
+                                            display: dispositivoMovel
+                                                ? "none"
+                                                : "block",
+                                            marginBottom: 5,
+                                        }}
+                                    >
                                         <Button
                                             className="btnOpcoes"
                                             type="primary"
                                             htmlType="submit"
                                             loading={loadingBaixar}
+                                            onClick={() => setAcaoBotao(2)}
                                         >
                                             <PrinterOutlined
                                                 style={{ fontSize: "20px" }}
@@ -205,12 +242,14 @@ const ValidaSignReceita = () => {
                                         </Button>
                                     </Form.Item>
 
+                                    {/* Valida Assinatura */}
                                     <Form.Item style={{ marginBottom: 15 }}>
                                         <Button
                                             className="btnOpcoes"
                                             type="primary"
                                             htmlType="submit"
                                             loading={loadingBaixar}
+                                            onClick={() => setAcaoBotao(3)}
                                         >
                                             <SignatureOutlined
                                                 style={{ fontSize: "20px" }}
@@ -221,8 +260,11 @@ const ValidaSignReceita = () => {
                                 </div>
                             </Col>
                         </Row>
+
+                        {/* Linha Antes Rodapé */}
                         <hr />
 
+                        {/* Rodapé */}
                         <footer
                             style={{
                                 height: 18,

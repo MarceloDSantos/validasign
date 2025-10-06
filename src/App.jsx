@@ -19,7 +19,7 @@ const App = () => {
                 <Switch>
 
                     {/* Define as rotas que serão renderizadas sem o layout com menu */}
-                    <Route path="/" exact component={SignReceita} />
+                    <Route path="/:token" exact component={SignReceita} />
 
                 </Switch>
 

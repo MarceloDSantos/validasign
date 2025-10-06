@@ -12,7 +12,8 @@ const validationMessages = {
   dataHora: 'Data/Hora inválidas',
   maiorQueZero: 'Valor deve ser maior que zero',
   min6: 'Mínimo de 6 caracteres',
-  repeatSenha: 'Senhas não conferem'
+  repeatSenha: 'Senhas não conferem',
+  letrasENumeros: 'Somente Letras e Números',
 };
 
 // Tipos de validações
@@ -22,8 +23,8 @@ const validationType = {
   data: 'data',
   dataHora: 'dataHora',
   maiorQueZero: 'maiorQueZero',
-  cpfExistente: 'cpfExistente',
-  repeatSenha: 'repeatSenha'
+  repeatSenha: 'repeatSenha',
+  letrasENumeros: 'letrasENumeros'
 };
 
 // Validações customizadas
@@ -32,6 +33,23 @@ const CustomValidations = async (type, value) => {
   let validatedMessage = '';
 
   switch (type) {
+
+    case validationType.letrasENumeros:
+      if (!value || value.length === 0 || (normalizeLetrasENumeros(value).length === value.length) ) {
+        validated = true;
+      } else {
+        validatedMessage = validationMessages.letrasENumeros;
+      }
+      break;
+
+    case validationType.min6:
+      if (!value || value.length === 6) {
+        validated = true;
+      } else {
+        validatedMessage = validationMessages.min6;
+      }
+      break;
+
     case validationType.cpf:
       if (!value || value.length === 0 || validateCpf(value)) {
         validated = true;
@@ -233,5 +251,14 @@ const validateCnpj = (val) => {
     return true;
   }
 };
+
+const normalizeLetrasENumeros = (value) => {
+    if (!value) {
+        return value;
+    }
+    // Remove caracterer dif de letras e números
+    return value.replace(/[^a-zA-Z0-9]/g, "");
+};
+
 
 export { CustomValidations, validationType, validationMessages };

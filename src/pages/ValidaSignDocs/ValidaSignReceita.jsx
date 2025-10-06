@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Alert, Button, Col, Form, Input, Row, Tooltip } from "antd";
 import {
     PrinterOutlined,
@@ -8,63 +8,141 @@ import {
     CloseCircleOutlined,
     QuestionCircleOutlined,
 } from "@ant-design/icons";
-import { validationMessages } from "../../helpers/CustomValidations";
+import {
+    CustomValidations,
+    validationMessages,
+    validationType,
+} from "../../helpers/CustomValidations";
 import { isMobile } from "../../helpers/FuncoesExtras";
+import { normalizeAlphaNumeric } from "../../helpers/StringHelpers";
 
-// import axios from "axios";
-// import api from "../../api";
+import axios from "axios";
+import api from "../../api";
 
 import amparaLogo from "../../images/ampara-logo-transparente.png";
 import { NOME_SISTEMA, VERSAO_SISTEMA } from "../../helpers/Constants";
 
-import "./ValidaSignReceita.css";
 import "../Animacoes.css";
+import "./ValidaSignReceita.css";
 
-
-
-
-// const isMobile = () => {
-//       const userAgent = navigator.userAgent;
-//       return /Mobi|Android|iPhone|iPad|iPod/i.test(userAgent);
-//     };
-
-// Inicia a Página/Componente
-const ValidaSignReceita = () => {
+const ValidaSignReceita = ({ match }) => {
     // const { handleLogout } = useContext(Context);
+    const [dispositivoMovel, setDispositivoMovel] = React.useState(isMobile());
     const [loading, setLoading] = useState(false);
     const [loadingBaixar, setLoadingBaixar] = useState(false);
     const [loadingImprimir, setLoadingImprimi] = useState(false);
     const [loadingValidar, setLoadingValidar] = useState(false);
-    const [alertMessage, setAlertMessage] = useState("");
-    const [alertType, setAlertType] = useState("error");
+    // const [alertMessage, setAlertMessage] = useState("");
+    // const [alertType, setAlertType] = useState("error");
     const [acaoBotao, setAcaoBotao] = useState(0);
-
-    const [dispositivoMovel, setDispositivoMovel] = React.useState(isMobile());
-
-    const [value, setValue] = useState("");
+    const [valueToken, setValueToken] = useState("");
+    const [alertMessageFalha, setAlertMessageFalha] = useState("");
 
     const [form] = Form.useForm();
 
-    const normalizeAlphaNumeric = (value) => {
-        if (!value) {
-            return value;
-        }
-        // Remove caracterer dif de letras e números
-        return value.replace(/[^a-zA-Z0-9]/g, "");
+    let parametroToken = "";
+
+    // Função para validar todos os dados no submit do form
+    const onClickSubmit = () => {
+        form.validateFields()
+            .then(() => {
+                setAlertMessageFalha("");
+                form.submit();
+            })
+            .catch(() => {
+                // setAlertType("error");
+                // setAlertMessage("Falha na validação! Verifique os campos.");
+            });
     };
 
-    const onFinishForm = (value) => {
-        if (value.token.trim().length === 0 || value.token === undefined) {
-            return;
-        }
+    // Funcao disparada pelo form
+    const onFinishForm = async (value) => {
+        setAlertMessageFalha('');
+
         // Baixar
         if (acaoBotao === 1) {
-            console.log("Baixar");
+            await downLoadReceitaPDF(value.token);
         } else if (acaoBotao === 2) {
             console.log("Imprimir");
         } else console.log("Validar");
     };
 
+    // Função para baixar pdf Receita
+    const downLoadReceitaPDF = async (token = "") => {
+        setAlertMessageFalha("");
+        setLoadingBaixar(true);
+
+                try {
+            // Consome a API para obter os dados necessários do objeto parametros
+            const response = await api.get(
+                `/farmacia/download/receita/${token}`,
+                {
+                    responseType: "arraybuffer",
+                }
+            );
+
+            if (!response) {
+                setLoadingBaixar(false);
+                return;
+            }
+
+            // Converte a resposta da API (fastReport) em Blob
+            const blob = new Blob([response.data], { type: "application/pdf" });
+
+            // Captura o nome do Arquivo enviado pela API no content-disposition
+            const filename = response.headers["content-disposition"]
+                .split("filename=")[1]
+                .split(";")[0]
+                .trim();
+
+            // Cria um Document Html como um link ( tag a )
+            let alink = document.createElement("a");
+
+            // Convert o Blob em uma URL
+            const url = URL.createObjectURL(blob);
+
+            // Seta a URL no link do Document
+            alink.href = url;
+
+            // Seta o nome do Arquivo no link para Download
+            alink.download = filename;
+
+            // Simula o Click para Iniciar o Download
+            alink.click();
+
+            // Altera o status do Spinning
+            setLoadingBaixar(false);
+            return true;
+        } catch (error) {
+            setLoadingBaixar(false);
+            // setAlertType("error");
+
+            if (error.response && error.response?.data) {
+                // Specify the encoding (e.g., 'utf-8', 'iso-8859-1')
+                const decoder = new TextDecoder("utf-8");
+                // Captura mensagem de erro
+                const decodedString = decoder.decode(error.response.data);
+                // Converte para JSON
+                var resp = JSON.parse(decodedString);
+                // Exibe Mensagem
+                setAlertMessageFalha(resp.msgResp);
+            } else {
+                setAlertMessageFalha("Falha " + error.message);
+            }
+        }
+
+    };
+
+    // Executa no primeiro render do componente
+    useEffect(() => {
+        // Recupera os parâmetros da rota
+        parametroToken = !match.params.token ? "" : match.params.token;
+
+        // Se for passado um parametro válido seta no form
+        if (parametroToken && parametroToken.length === 6) {
+            form.setFieldValue("token", parametroToken);
+        }
+    }, []);
 
     return (
         <>
@@ -73,7 +151,7 @@ const ValidaSignReceita = () => {
                     {/* Exibe Loading */}
                     {/* <Spin spinning={loading}> */}
                     {/* Exibe o alerta/mensagem caso possua mensagem definida  */}
-                    {alertMessage && (
+                    {/* {alertMessage && (
                         <>
                             <Alert
                                 message={alertMessage}
@@ -82,7 +160,7 @@ const ValidaSignReceita = () => {
                             />
                             <br />
                         </>
-                    )}
+                    )} */}
 
                     <Form
                         form={form}
@@ -90,7 +168,7 @@ const ValidaSignReceita = () => {
                         layout="vertical"
                         className="form fadeInDown"
                         onFinish={onFinishForm}
-                     >
+                    >
                         {/* Logo do sistema  */}
                         <div
                             style={{
@@ -128,6 +206,22 @@ const ValidaSignReceita = () => {
                                         width: "100%",
                                     }}
                                 >
+                                    {alertMessageFalha && (
+                                        <div
+                                            style={{
+                                                display: alertMessageFalha
+                                                    ? "block"
+                                                    : "none",
+                                                textAlign: "center",
+                                                color: "#ee4141fc",
+                                                fontWeight: 500,
+                                            }}
+                                        >
+                                            {alertMessageFalha}
+                                            <hr/>
+                                        </div>
+                                    )}
+
                                     {/* Input Token */}
                                     <div
                                         style={{
@@ -150,15 +244,35 @@ const ValidaSignReceita = () => {
                                                     message:
                                                         validationMessages.required,
                                                 },
+                                                {
+                                                    min: 6,
+                                                    message:
+                                                        "Obrigatório 06 caracteres.",
+                                                },
+                                                {
+                                                    max: 6,
+                                                    message:
+                                                        "Obrigatório 06 caracteres.",
+                                                },
+                                                () => ({
+                                                    validator(_, value) {
+                                                        return CustomValidations(
+                                                            validationType.letrasENumeros,
+                                                            value
+                                                        );
+                                                    },
+                                                }),
                                             ]}
-                                            normalize={normalizeAlphaNumeric} // Somente letras números
                                         >
                                             <Input
                                                 autoFocus
                                                 placeholder="Token da Receita"
                                                 minLength={6}
                                                 maxLength={6}
-                                                value={value}
+                                                value={valueToken}
+                                                onChange={() =>
+                                                    setAlertMessageFalha("")
+                                                }
                                                 style={{
                                                     width: 150,
                                                     fontSize: "1rem",
@@ -173,7 +287,7 @@ const ValidaSignReceita = () => {
                                             title="Limpar"
                                             color={"blue"}
                                             style={{
-                                                fontSize: "0.3rem",
+                                                fontSize: "0.5rem",
                                             }}
                                         >
                                             <Button
@@ -207,10 +321,13 @@ const ValidaSignReceita = () => {
                                         <Button
                                             className="btnOpcoes"
                                             type="primary"
-                                            htmlType="submit"
                                             name="btnBaixar"
+                                            // htmlType="submit"
                                             loading={loadingBaixar}
-                                            onClick={() => setAcaoBotao(1)}
+                                            onClick={() => {
+                                                onClickSubmit(),
+                                                    setAcaoBotao(1);
+                                            }}
                                         >
                                             <CloudDownloadOutlined
                                                 style={{ fontSize: "20px" }}
@@ -232,7 +349,7 @@ const ValidaSignReceita = () => {
                                             className="btnOpcoes"
                                             type="primary"
                                             htmlType="submit"
-                                            loading={loadingBaixar}
+                                            loading={loadingImprimir}
                                             onClick={() => setAcaoBotao(2)}
                                         >
                                             <PrinterOutlined
@@ -248,7 +365,7 @@ const ValidaSignReceita = () => {
                                             className="btnOpcoes"
                                             type="primary"
                                             htmlType="submit"
-                                            loading={loadingBaixar}
+                                            loading={loadingValidar}
                                             onClick={() => setAcaoBotao(3)}
                                         >
                                             <SignatureOutlined

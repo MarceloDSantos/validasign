@@ -19,4 +19,13 @@ const converterTextoPlural = (palavra, qut = 1) => {
   }
 };
 
-export { converterTextoPlural };
+// Função para aceitar somente números e letras
+const normalizeAlphaNumeric = (value) => {
+    if (!value) {
+        return value;
+    }
+    // Remove caracterer dif de letras e números
+    return value.replace(/[^a-zA-Z0-9]/g, "");
+};
+
+export { converterTextoPlural, normalizeAlphaNumeric };

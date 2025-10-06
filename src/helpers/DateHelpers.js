@@ -63,8 +63,6 @@ const getDiferencaHorasMinutos = (data1, data2) => {
   };
 }
 
-
-
 export {
   getDateFromNumDays,
   getDateFromYesterday,

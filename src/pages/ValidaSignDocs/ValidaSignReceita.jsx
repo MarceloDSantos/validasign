@@ -14,7 +14,6 @@ import {
     validationType,
 } from "../../helpers/CustomValidations";
 import { isMobile } from "../../helpers/FuncoesExtras";
-import { normalizeAlphaNumeric } from "../../helpers/StringHelpers";
 
 import axios from "axios";
 import api from "../../api";
@@ -57,7 +56,7 @@ const ValidaSignReceita = ({ match }) => {
 
     // Funcao disparada pelo form
     const onFinishForm = async (value) => {
-        setAlertMessageFalha('');
+        setAlertMessageFalha("");
 
         // Baixar
         if (acaoBotao === 1) {
@@ -72,10 +71,10 @@ const ValidaSignReceita = ({ match }) => {
         setAlertMessageFalha("");
         setLoadingBaixar(true);
 
-                try {
+        try {
             // Consome a API para obter os dados necessários do objeto parametros
             const response = await api.get(
-                `/farmacia/download/receita/${token}`,
+                `/farmacia/download/receita/?${token}`,
                 {
                     responseType: "arraybuffer",
                 }
@@ -130,7 +129,6 @@ const ValidaSignReceita = ({ match }) => {
                 setAlertMessageFalha("Falha " + error.message);
             }
         }
-
     };
 
     // Executa no primeiro render do componente
@@ -218,7 +216,7 @@ const ValidaSignReceita = ({ match }) => {
                                             }}
                                         >
                                             {alertMessageFalha}
-                                            <hr/>
+                                            <hr />
                                         </div>
                                     )}
 

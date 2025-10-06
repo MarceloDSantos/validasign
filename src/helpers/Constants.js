@@ -1,4 +1,4 @@
-export const AMBIENTEAPI = 'dev'; // prod ou dev
+export const AMBIENTEAPI = 'prod'; // prod ou dev
 
 export const NOME_SISTEMA = 'ValidaSign';
 export const VERSAO_SISTEMA = 'v1.0';

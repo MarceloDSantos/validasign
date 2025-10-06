@@ -12,14 +12,13 @@ const NotFound = () => {
 const Routes = () => {
   return (
     <Routes>
-      {/* Rota padrão leva a pagina da Agenda Diárias por local de atendimento */}
 
-      <CustomRoute
+      {/* <CustomRoute
         path="/receita"
         exact
         isPrivate
         component={ValidaSignDocs}
-      />
+      /> */}
 
     </Routes>
   );

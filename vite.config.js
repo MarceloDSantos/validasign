@@ -12,7 +12,7 @@ export default defineConfig({
     }),
   ],
   server: {
-    port: 3040,
+    port: 3030,
     open: true,
   },
 });

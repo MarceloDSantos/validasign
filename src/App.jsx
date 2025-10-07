@@ -18,8 +18,11 @@ const App = () => {
                 {/* Componente de troca de rotas */}
                 <Switch>
 
-                    {/* Define as rotas que serão renderizadas sem o layout com menu */}
+                    {/* Define a rota de download */}
                     <Route path="/receita/:token?" exact component={SignReceita} />
+
+                     {/* Define a rotas de Impressã */}
+                    <Route path="/impressao/:token?" exact component={SignReceita} />
 
                 </Switch>
 

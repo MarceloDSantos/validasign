@@ -29,7 +29,7 @@ const ValidaSignReceita = ({ match }) => {
     const [dispositivoMovel, setDispositivoMovel] = React.useState(isMobile());
     const [loading, setLoading] = useState(false);
     const [loadingBaixar, setLoadingBaixar] = useState(false);
-    const [loadingImprimir, setLoadingImprimi] = useState(false);
+    const [loadingImprimir, setLoadingImprimir] = useState(false);
     const [loadingValidar, setLoadingValidar] = useState(false);
     // const [alertMessage, setAlertMessage] = useState("");
     // const [alertType, setAlertType] = useState("error");
@@ -38,6 +38,7 @@ const ValidaSignReceita = ({ match }) => {
     const [alertMessageFalha, setAlertMessageFalha] = useState("");
 
     const [form] = Form.useForm();
+    const [pdfUrl, setPdfUrl] = useState("");
 
     let parametroToken = "";
 
@@ -62,7 +63,7 @@ const ValidaSignReceita = ({ match }) => {
         if (acaoBotao === 1) {
             await downLoadReceitaPDF(value.token);
         } else if (acaoBotao === 2) {
-            console.log("Imprimir");
+            await imprimirReceitaPDF(value.token);
         } else console.log("Validar");
     };
 
@@ -74,7 +75,7 @@ const ValidaSignReceita = ({ match }) => {
         try {
             // Consome a API para obter os dados necessários do objeto parametros
             const response = await api.get(
-                `/farmacia/download/receita/?${token}`,
+                `/farmacia/download/receita/${token}`,
                 {
                     responseType: "arraybuffer",
                 }
@@ -131,6 +132,70 @@ const ValidaSignReceita = ({ match }) => {
         }
     };
 
+    // Lê o frame do desing e abe painel de impressão da Receita
+    const handlePrintReceita = async () => {
+        // Carrega frame em específico
+        const iframe = document.getElementById("pdfReceita");
+
+        // 2. Ocultar o iframe
+        if (iframe) {
+            iframe.style.display = "none";
+        }
+
+        // 3. Abre a Abre Painel de Impressão
+        iframe.onload = function () {
+            setTimeout(function () {
+                iframe.focus();
+                iframe.contentWindow.print();
+            }, 1);
+        };
+    };
+
+    // Busca FastReport MemoStream da Receita
+    const imprimirReceitaPDF = async (token = "") => {
+        setAlertMessageFalha("");
+        setLoadingImprimir(true);
+
+        try {
+            // Consome a API para obter os dados
+            const response = await api.get(
+                `/farmacia/impressao/receita/${token}`,
+                {
+                    responseType: "arraybuffer",
+                }
+            );
+
+            if (!response) {
+                setLoadingImprimir(false);
+                return;
+            }
+
+            const blob = new Blob([response.data], { type: "application/pdf" });
+            const url = URL.createObjectURL(blob);
+
+            setPdfUrl(url);
+
+            // Chama painel de impressão
+            handlePrintReceita();
+            setLoadingImprimir(false);
+        } catch (error) {
+            setLoadingImprimir(false);
+
+            if (error.response && error.response?.data) {
+                // Specify the encoding (e.g., 'utf-8', 'iso-8859-1')
+                const decoder = new TextDecoder("utf-8");
+                // Captura mensagem de erro
+                const decodedString = decoder.decode(error.response.data);
+                // Converte para JSON
+                var resp = JSON.parse(decodedString);
+                // Exibe Mensagem
+                setAlertMessageFalha(resp.msgResp);
+            } else {
+                setAlertMessageFalha(error.message + " " + error.stack);
+            }
+        }
+    };
+
     // Executa no primeiro render do componente
     useEffect(() => {
         // Recupera os parâmetros da rota
@@ -144,22 +209,19 @@ const ValidaSignReceita = ({ match }) => {
 
     return (
         <>
+            {/* Modal de Impressão */}
+            {pdfUrl && (
+                <iframe
+                    id="pdfReceita"
+                    src={pdfUrl}
+                    type="application/pdf"
+                    title="Relatório"
+                    style={{ border: "none" }}
+                />
+            )}
+
             <div className="background-full">
                 <div className="container-form">
-                    {/* Exibe Loading */}
-                    {/* <Spin spinning={loading}> */}
-                    {/* Exibe o alerta/mensagem caso possua mensagem definida  */}
-                    {/* {alertMessage && (
-                        <>
-                            <Alert
-                                message={alertMessage}
-                                type={alertType}
-                                showIcon
-                            />
-                            <br />
-                        </>
-                    )} */}
-
                     <Form
                         form={form}
                         name="form-validasign"
@@ -348,7 +410,10 @@ const ValidaSignReceita = ({ match }) => {
                                             type="primary"
                                             htmlType="submit"
                                             loading={loadingImprimir}
-                                            onClick={() => setAcaoBotao(2)}
+                                            onClick={() => {
+                                                onClickSubmit(),
+                                                    setAcaoBotao(2);
+                                            }}
                                         >
                                             <PrinterOutlined
                                                 style={{ fontSize: "20px" }}

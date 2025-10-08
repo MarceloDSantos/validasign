@@ -19,7 +19,11 @@ import axios from "axios";
 import api from "../../api";
 
 import amparaLogo from "../../images/ampara-logo-transparente.png";
-import { NOME_SISTEMA, VERSAO_SISTEMA } from "../../helpers/Constants";
+import {
+    NOME_SISTEMA,
+    PATH_PDF_RECEITA,
+    VERSAO_SISTEMA,
+} from "../../helpers/Constants";
 
 import "../Animacoes.css";
 import "./ValidaSignReceita.css";
@@ -64,7 +68,18 @@ const ValidaSignReceita = ({ match }) => {
             await downLoadReceitaPDF(value.token);
         } else if (acaoBotao === 2) {
             await imprimirReceitaPDF(value.token);
-        } else console.log("Validar");
+        } else await copiarLinkArquivoPDF(value.token);
+    };
+
+    const copiarLinkArquivoPDF = async (token) => {
+        try {
+            const link = `${PATH_PDF_RECEITA}${token}.pdf`;
+            await navigator.clipboard.writeText(link);
+
+            setAlertMessageFalha(`Link copiado com Sucesso!`);
+        } catch (err) {
+            setAlertMessageFalha(`Falha ao copiar o link /n [ ${err} ]`);
+        }
     };
 
     // Função para baixar pdf Receita
@@ -352,9 +367,12 @@ const ValidaSignReceita = ({ match }) => {
                                         >
                                             <Button
                                                 size="small"
-                                                onClick={() =>
-                                                    form.resetFields()
-                                                }
+                                                onClick={() => {
+                                                    form.resetFields(),
+                                                        setAlertMessageFalha(
+                                                            ""
+                                                        );
+                                                }}
                                                 icon={<CloseCircleOutlined />}
                                                 style={{
                                                     color: "#9c0306ff",

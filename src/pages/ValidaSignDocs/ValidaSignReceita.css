@@ -29,3 +29,10 @@
     border: 0.5px solid rgba(10, 33, 162, 0.493);
 }
 
+.ant-steps-item-title {
+  font-size: 0.1rem; /* Adjust font size as needed */
+}
+
+.ant-steps-item {
+  width: 650px; /* Adjust width as needed */
+}

@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Alert, Button, Col, Form, Input, Row, Tooltip } from "antd";
+import {
+    Alert,
+    Button,
+    Col,
+    Form,
+    Input,
+    Row,
+    Tooltip,
+    Modal,
+    Steps,
+} from "antd";
 import {
     PrinterOutlined,
     SignatureOutlined,
@@ -7,6 +17,7 @@ import {
     FileProtectOutlined,
     CloseCircleOutlined,
     QuestionCircleOutlined,
+    CheckCircleOutlined,
 } from "@ant-design/icons";
 import {
     CustomValidations,
@@ -40,6 +51,7 @@ const ValidaSignReceita = ({ match }) => {
     const [acaoBotao, setAcaoBotao] = useState(0);
     const [valueToken, setValueToken] = useState("");
     const [alertMessageFalha, setAlertMessageFalha] = useState("");
+    const [exibeModalValidacao, setExibeModalValidacao] = useState(false);
 
     const [form] = Form.useForm();
     const [pdfUrl, setPdfUrl] = useState("");
@@ -72,13 +84,59 @@ const ValidaSignReceita = ({ match }) => {
     };
 
     const copiarLinkArquivoPDF = async (token) => {
-        try {
-            const link = `${PATH_PDF_RECEITA}${token}.pdf`;
-            await navigator.clipboard.writeText(link);
+        setAlertMessageFalha("");
+        setLoadingValidar(true);
 
-            setAlertMessageFalha(`Link copiado com Sucesso!`);
-        } catch (err) {
-            setAlertMessageFalha(`Falha ao copiar o link /n [ ${err} ]`);
+        try {
+            // Consome a API para realizar o login
+            await api
+                .get(`/farmacia/url/receita/${token}`)
+                // Se requisição com sucesso
+                .then((response) => {
+                    const { data } = response;
+                    if (data.codResp === undefined) {
+                        if (!data) {
+                            setLoadingValidar(false);
+                            setAlertMessageFalha(
+                                `Falha ao copiar o link /n [ ${err} ]`
+                            );
+                        } else {
+                            // Copia o link gerado para área de transferência
+                            navigator.clipboard.writeText(data);
+
+                            setAlertMessageFalha(`Link copiado com Sucesso!`);
+
+                            setTimeout(() => {
+                                setAlertMessageFalha("");
+                                setExibeModalValidacao(true); // Executa a segunda função após 10 segundos (10000 milissegundos)
+                            }, 1300);
+                            setLoadingValidar(false);
+                            return;
+                        }
+                    } else {
+                        if (data.codResp < 0) {
+                            setLoadingValidar(false);
+                            setAlertMessageFalha(data.msgResp);
+                            return;
+                        }
+                    }
+                });
+        } catch (error) {
+            setLoadingValidar(false);
+            // setAlertType("error");
+
+            if (error.response && error.response?.data) {
+                // Specify the encoding (e.g., 'utf-8', 'iso-8859-1')
+                const decoder = new TextDecoder("utf-8");
+                // Captura mensagem de erro
+                const decodedString = decoder.decode(error.response.data);
+                // Converte para JSON
+                var resp = JSON.parse(decodedString);
+                // Exibe Mensagem
+                setAlertMessageFalha(resp);
+            } else {
+                setAlertMessageFalha("Falha " + error.message);
+            }
         }
     };
 
@@ -234,6 +292,104 @@ const ValidaSignReceita = ({ match }) => {
                     style={{ border: "none" }}
                 />
             )}
+
+            <Modal
+                width={650}
+                title="INSTRUÇÕES PARA VALIDAR ASSINATURA DIGITAL"
+                centered
+                open={exibeModalValidacao}
+                onOk={() =>
+                    (window.location.href =
+                        "https://validar.iti.gov.br/index.html")
+                }
+                onCancel={() => setExibeModalValidacao(false)}
+            >
+                <hr />
+
+                <p
+                    style={{
+                        fontSize: "1rem",
+                        fontWeight: 500,
+                        color: "#892929ff",
+                        textAlign: "center",
+                    }}
+                >
+                    Leia com Atenção todos os itens abaixo antes de clicar no
+                    botão OK
+                </p>
+
+                <Steps
+                    style={{ fontSize: "0.5rem" }}
+                    progressDot
+                    current={4}
+                    direction="vertical"
+                    items={[
+                        {
+                            title: (
+                                <span style={{ fontSize: "0.9rem" }}>
+                                    Ao clicar no botão [ <b>Ok</b> ] você será
+                                    redirecionado ao site oficial de validação
+                                    de assintaturas.
+                                </span>
+                            ),
+                        },
+                        {
+                            title: (
+                                <span style={{ fontSize: "0.9rem" }}>
+                                    Após ser redirecionado, localize na pagina e
+                                    selecione a opção ( Colar URL ).
+                                </span>
+                            ),
+                        },
+                        {
+                            title: (
+                                <span style={{ fontSize: "0.9rem" }}>
+                                    Na caixa de digitação digite [ <b>Ctrl+V</b>{" "}
+                                    ], para colar o Link e clique no botão [{" "}
+                                    <b>Enviar</b> ].
+                                </span>
+                            ),
+                        },
+                        {
+                            title: (
+                                <span style={{ fontSize: "0.9rem" }}>
+                                    Localize na página a expressão{" "}
+                                    <span
+                                        style={{
+                                            color: "blue",
+                                            fontWeight: 500,
+                                        }}
+                                    >
+                                        Assinatura Aprovada
+                                    </span>{" "}
+                                </span>
+                            ),
+                        },
+                        {
+                            title: (
+                                <span style={{ fontSize: "0.9rem" }}>
+                                    No caso de {" "}
+                                    <span
+                                        style={{
+                                            color: "red",
+                                            fontWeight: 500,
+                                        }}
+                                    >
+                                        Assinatura Inválida{" "}
+                                    </span>
+                                    , comunique ao Paciente que o mesmo deverá
+                                    solicitar
+                                    <b>
+                                        {" "}
+                                        uma nova receita devidamente assinada{" "}
+                                    </b>
+                                    , para que a venda possa ser realizada.
+                                </span>
+                            ),
+                        },
+                    ]}
+                />
+            </Modal>
 
             <div className="background-full">
                 <div className="container-form">

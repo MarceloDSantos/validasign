@@ -6,5 +6,5 @@ export const SHOW_BREAKPOINT = false;
 
 export const PATH_PDF_RECEITA =
     AMBIENTEAPI === "prod"
-        ? `https://validasign.ampara.twsoft.com.br/pdfs/receitas/Receita-`
-        : `D:\\TechnoWare\\Projetos\\CSharp\\Web\\FPGMWebAPI\\pdfs\\receitas\\Receita-`;
+        ? `https://validasign.ampara.twsoft.com.br//wwwroot//pdfs//receitas//Receita-`
+        : `D:\\TechnoWare\\Projetos\\CSharp\\Web\\FPGMWebAPI\\wwwroot\\pdfs\\receitas\\Receita-`;

@@ -4,6 +4,8 @@ export const NOME_SISTEMA = "ValidaSign";
 export const VERSAO_SISTEMA = "v1.0";
 export const SHOW_BREAKPOINT = false;
 
+export const SITE_VALIDADOR_ITI= "https://validar.iti.gov.br/"
+
 export const PATH_PDF_RECEITA =
     AMBIENTEAPI === "prod"
         ? `https://validasign.ampara.twsoft.com.br//wwwroot//pdfs//receitas//Receita-`

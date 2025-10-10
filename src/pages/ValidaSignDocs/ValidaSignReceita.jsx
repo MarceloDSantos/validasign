@@ -9,15 +9,18 @@ import {
     Tooltip,
     Modal,
     Steps,
+    QRCode,
+    Space,
 } from "antd";
 import {
     PrinterOutlined,
-    SignatureOutlined,
     CloudDownloadOutlined,
     FileProtectOutlined,
     CloseCircleOutlined,
     QuestionCircleOutlined,
-    CheckCircleOutlined,
+    LinkOutlined,
+    QrcodeOutlined,
+    SignatureFilled,
 } from "@ant-design/icons";
 import {
     CustomValidations,
@@ -25,14 +28,13 @@ import {
     validationType,
 } from "../../helpers/CustomValidations";
 import { isMobile } from "../../helpers/FuncoesExtras";
-
-import axios from "axios";
 import api from "../../api";
 
 import amparaLogo from "../../images/ampara-logo-transparente.png";
 import {
     NOME_SISTEMA,
     PATH_PDF_RECEITA,
+    SITE_VALIDADOR_ITI,
     VERSAO_SISTEMA,
 } from "../../helpers/Constants";
 
@@ -45,13 +47,16 @@ const ValidaSignReceita = ({ match }) => {
     const [loading, setLoading] = useState(false);
     const [loadingBaixar, setLoadingBaixar] = useState(false);
     const [loadingImprimir, setLoadingImprimir] = useState(false);
-    const [loadingValidar, setLoadingValidar] = useState(false);
+    const [loadingURL, setLoadingURL] = useState(false);
+    const [loadingQRCode, setLoadingQRCode] = useState(false);
     // const [alertMessage, setAlertMessage] = useState("");
     // const [alertType, setAlertType] = useState("error");
     const [acaoBotao, setAcaoBotao] = useState(0);
     const [valueToken, setValueToken] = useState("");
     const [alertMessageFalha, setAlertMessageFalha] = useState("");
     const [exibeModalValidacao, setExibeModalValidacao] = useState(false);
+    const [exibeModalQrCode, setExibeModalQrCode] = useState(false);
+    const [qrCodeValue, setQrCodeValue] = useState("");
 
     const [form] = Form.useForm();
     const [pdfUrl, setPdfUrl] = useState("");
@@ -80,12 +85,74 @@ const ValidaSignReceita = ({ match }) => {
             await downLoadReceitaPDF(value.token);
         } else if (acaoBotao === 2) {
             await imprimirReceitaPDF(value.token);
-        } else await copiarLinkArquivoPDF(value.token);
+        } else if (acaoBotao === 3) {
+            await copiarLinkArquivoPDF(value.token);
+        } else if (acaoBotao === 4) {
+            await mostraQRCodeReceitaPDF(value.token);
+        } else if (acaoBotao === 5) {
+             window.location.href = SITE_VALIDADOR_ITI;
+
+        }
+    };
+
+    // Busca FastReport MemoStream da Receita
+    const mostraQRCodeReceitaPDF = async (token = "") => {
+        setAlertMessageFalha("");
+        setExibeModalQrCode(false);
+        setLoadingQRCode(true);
+
+        try {
+            // Consome a API para realizar o login
+            await api
+                .get(`/farmacia/qrcode/receita/${token}`)
+                // Se requisição com sucesso
+                .then((response) => {
+                    const { data } = response;
+                    if (data.codResp === undefined) {
+                        if (!data) {
+                            setLoadingQRCode(false);
+                            setAlertMessageFalha(
+                                `Falha ao gerar QRCode /n [ ${err} ]`
+                            );
+                        } else {
+                            setLoadingQRCode(false);
+
+                            setQrCodeValue(data);
+
+                            setExibeModalQrCode(true);
+
+                            return;
+                        }
+                    } else {
+                        if (data.codResp < 0) {
+                            setLoadingQRCode(false);
+                            setAlertMessageFalha(data.msgResp);
+                            return;
+                        }
+                    }
+                });
+        } catch (error) {
+            setLoadingQRCode(false);
+            // setAlertType("error");
+
+            if (error.response && error.response?.data) {
+                // Specify the encoding (e.g., 'utf-8', 'iso-8859-1')
+                const decoder = new TextDecoder("utf-8");
+                // Captura mensagem de erro
+                const decodedString = decoder.decode(error.response.data);
+                // Converte para JSON
+                var resp = JSON.parse(decodedString);
+                // Exibe Mensagem
+                setAlertMessageFalha(resp);
+            } else {
+                setAlertMessageFalha("Falha " + error.message);
+            }
+        }
     };
 
     const copiarLinkArquivoPDF = async (token) => {
         setAlertMessageFalha("");
-        setLoadingValidar(true);
+        setLoadingURL(true);
 
         try {
             // Consome a API para realizar o login
@@ -96,7 +163,7 @@ const ValidaSignReceita = ({ match }) => {
                     const { data } = response;
                     if (data.codResp === undefined) {
                         if (!data) {
-                            setLoadingValidar(false);
+                            setLoadingURL(false);
                             setAlertMessageFalha(
                                 `Falha ao copiar o link /n [ ${err} ]`
                             );
@@ -109,20 +176,20 @@ const ValidaSignReceita = ({ match }) => {
                             setTimeout(() => {
                                 setAlertMessageFalha("");
                                 setExibeModalValidacao(true); // Executa a segunda função após 10 segundos (10000 milissegundos)
-                            }, 1300);
-                            setLoadingValidar(false);
+                            }, 1200);
+                            setLoadingURL(false);
                             return;
                         }
                     } else {
                         if (data.codResp < 0) {
-                            setLoadingValidar(false);
+                            setLoadingURL(false);
                             setAlertMessageFalha(data.msgResp);
                             return;
                         }
                     }
                 });
         } catch (error) {
-            setLoadingValidar(false);
+            setLoadingURL(false);
             // setAlertType("error");
 
             if (error.response && error.response?.data) {
@@ -293,16 +360,41 @@ const ValidaSignReceita = ({ match }) => {
                 />
             )}
 
+            {/* Modal de Validação de Assinatura */}
             <Modal
                 width={650}
-                title="INSTRUÇÕES PARA VALIDAR ASSINATURA DIGITAL"
-                centered
-                open={exibeModalValidacao}
-                onOk={() =>
-                    (window.location.href =
-                        "https://validar.iti.gov.br/index.html")
+                centered={true}
+                title={
+                    <span style={{ fontSize: "1.2rem" }}>
+                        {" "}
+                        {<LinkOutlined />} INSTRUÇÕES PARA VALIDAR ASSINATURA
+                        DIGITAL POR URL{" "}
+                    </span>
                 }
-                onCancel={() => setExibeModalValidacao(false)}
+                open={exibeModalValidacao}
+                // onOk={() =>
+                //     (window.location.href =
+                //         "https://validar.iti.gov.br/index.html")
+                // }
+                // onCancel={() => setExibeModalValidacao(false)}
+                footer={[
+                    <Button
+                        key="cancel"
+                        onClick={() => setExibeModalValidacao(false)}
+                    >
+                        Cancelar
+                    </Button>,
+                    <Button
+                        key="submit"
+                        type="primary"
+                        onClick={() =>
+                            (window.location.href =
+                                "https://validar.iti.gov.br/index.html")
+                        }
+                    >
+                        Continuar
+                    </Button>,
+                ]}
             >
                 <hr />
 
@@ -315,7 +407,7 @@ const ValidaSignReceita = ({ match }) => {
                     }}
                 >
                     Leia com Atenção todos os itens abaixo antes de clicar no
-                    botão OK
+                    botão Continuar
                 </p>
 
                 <Steps
@@ -327,9 +419,9 @@ const ValidaSignReceita = ({ match }) => {
                         {
                             title: (
                                 <span style={{ fontSize: "0.9rem" }}>
-                                    Ao clicar no botão [ <b>Ok</b> ] você será
-                                    redirecionado ao site oficial de validação
-                                    de assintaturas.
+                                    Ao clicar no botão [ <b>Continuar</b> ] você
+                                    será redirecionado ao site oficial de
+                                    validação de assintaturas.
                                 </span>
                             ),
                         },
@@ -344,9 +436,9 @@ const ValidaSignReceita = ({ match }) => {
                         {
                             title: (
                                 <span style={{ fontSize: "0.9rem" }}>
-                                    Na caixa de digitação digite [ <b>Ctrl+V</b>{" "}
-                                    ], para colar o Link e clique no botão [{" "}
-                                    <b>Enviar</b> ].
+                                    Na caixa de digitação tecle [ <b>Ctrl+V</b>{" "}
+                                    ] para colar a URL, em seguida clique no
+                                    botão [ <b>Enviar</b> ].
                                 </span>
                             ),
                         },
@@ -362,13 +454,14 @@ const ValidaSignReceita = ({ match }) => {
                                     >
                                         Assinatura Aprovada
                                     </span>{" "}
+                                    , e conclua a venda.
                                 </span>
                             ),
                         },
                         {
                             title: (
                                 <span style={{ fontSize: "0.9rem" }}>
-                                    No caso de {" "}
+                                    No caso de{" "}
                                     <span
                                         style={{
                                             color: "red",
@@ -391,6 +484,39 @@ const ValidaSignReceita = ({ match }) => {
                 />
             </Modal>
 
+            {/* Modal QRCode */}
+            <Modal
+                style={{ padding: 5 }}
+                width={550}
+                centered={true}
+                title="QRCode"
+                open={exibeModalQrCode}
+                onCancel={() => setExibeModalQrCode(false)}
+                footer={null}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <Space direction="horizontal" align="center">
+                        <QRCode
+                            level="H"
+                            size={200}
+                            value={qrCodeValue || "-"}
+                        />
+                    </Space>
+                </div>
+                <Input
+                    placeholder="-"
+                    maxLength={160}
+                    value={qrCodeValue.toString()}
+                />
+            </Modal>
+
+            {/* Menu de Opçoes */}
             <div className="background-full">
                 <div className="container-form">
                     <Form
@@ -434,7 +560,7 @@ const ValidaSignReceita = ({ match }) => {
                                         alignItems: "center",
                                         alignContent: "center",
                                         textAlign: "center",
-                                        width: "100%",
+                                        // width: "100%",
                                     }}
                                 >
                                     {alertMessageFalha && (
@@ -596,19 +722,58 @@ const ValidaSignReceita = ({ match }) => {
                                         </Button>
                                     </Form.Item>
 
-                                    {/* Valida Assinatura */}
-                                    <Form.Item style={{ marginBottom: 15 }}>
+                                    {/* Gera QRCode para Validar Assinatura */}
+                                    <Form.Item style={{ marginBottom: "5px" }}>
                                         <Button
                                             className="btnOpcoes"
                                             type="primary"
                                             htmlType="submit"
-                                            loading={loadingValidar}
-                                            onClick={() => setAcaoBotao(3)}
+                                            loading={loadingQRCode}
+                                            onClick={() => setAcaoBotao(4)}
                                         >
-                                            <SignatureOutlined
+                                            <QrcodeOutlined
                                                 style={{ fontSize: "20px" }}
                                             />
-                                            Validar Assinatura Digital
+                                            Exibir QrCode da Receita
+                                        </Button>
+                                    </Form.Item>
+
+                                    {/* Captura Link URL para Validar Assinatura */}
+                                    <Form.Item style={{ marginBottom: "5px" }}>
+                                        <Button
+                                            className="btnOpcoes"
+                                            type="primary"
+                                            htmlType="submit"
+                                            loading={loadingURL}
+                                            onClick={() => setAcaoBotao(3)}
+                                        >
+                                            <LinkOutlined
+                                                style={{ fontSize: "20px" }}
+                                            />
+                                            Copiar URL da Assinatura Digital
+                                        </Button>
+                                    </Form.Item>
+
+                                    {/* Redireciona para Validador ITI */}
+                                    <Form.Item style={{ marginTop: "0px" }}>
+                                        <Button
+                                            className="btnOpcoes"
+                                            color="cyan"
+                                            variant="solid"
+                                            htmlType="submit"
+                                            loading={loadingQRCode}
+                                            onClick={() => setAcaoBotao(5)}
+                                        >
+                                            <QrcodeOutlined
+                                                style={{ fontSize: "20px" }}
+                                            />
+                                            Validador I.T.I.
+                                            <img
+                                                src="https://validar.iti.gov.br/imagens/govbr.svg"
+                                                width={50}
+                                                height={50}
+                                                alt="validar.iti.gov.br"
+                                            />
                                         </Button>
                                     </Form.Item>
                                 </div>

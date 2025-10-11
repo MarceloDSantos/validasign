@@ -49,6 +49,7 @@ const ValidaSignReceita = ({ match }) => {
     const [loadingImprimir, setLoadingImprimir] = useState(false);
     const [loadingURL, setLoadingURL] = useState(false);
     const [loadingQRCode, setLoadingQRCode] = useState(false);
+    const [loadingValidaITI, setLoadingValidaITI] = useState(false);
     // const [alertMessage, setAlertMessage] = useState("");
     // const [alertType, setAlertType] = useState("error");
     const [acaoBotao, setAcaoBotao] = useState(0);
@@ -90,9 +91,21 @@ const ValidaSignReceita = ({ match }) => {
         } else if (acaoBotao === 4) {
             await mostraQRCodeReceitaPDF(value.token);
         } else if (acaoBotao === 5) {
-             window.location.href = SITE_VALIDADOR_ITI;
-
+            await redirecionaValidaITI();
         }
+    };
+
+    const redirecionaValidaITI = async () => {
+        setAlertMessageFalha("");
+        setLoadingValidaITI(true);
+
+        const timer = setTimeout(() => {
+            window.location.href = SITE_VALIDADOR_ITI;
+        }, 2000); // 5000 milliseconds = 10 seconds
+
+       //setLoadingValidaITI(false);
+        // Cleanup function to clear the timeout if the component unmounts
+        return () => clearTimeout(timer);
     };
 
     // Busca FastReport MemoStream da Receita
@@ -173,9 +186,10 @@ const ValidaSignReceita = ({ match }) => {
 
                             setAlertMessageFalha(`Link copiado com Sucesso!`);
 
+                            // Força um Delay
                             setTimeout(() => {
                                 setAlertMessageFalha("");
-                                setExibeModalValidacao(true); // Executa a segunda função após 10 segundos (10000 milissegundos)
+                                setExibeModalValidacao(true);
                             }, 1200);
                             setLoadingURL(false);
                             return;
@@ -487,7 +501,7 @@ const ValidaSignReceita = ({ match }) => {
             {/* Modal QRCode */}
             <Modal
                 style={{ padding: 5 }}
-                width={550}
+                width={350}
                 centered={true}
                 title="QRCode"
                 open={exibeModalQrCode}
@@ -509,11 +523,6 @@ const ValidaSignReceita = ({ match }) => {
                         />
                     </Space>
                 </div>
-                <Input
-                    placeholder="-"
-                    maxLength={160}
-                    value={qrCodeValue.toString()}
-                />
             </Modal>
 
             {/* Menu de Opçoes */}
@@ -682,7 +691,7 @@ const ValidaSignReceita = ({ match }) => {
                                             className="btnOpcoes"
                                             type="primary"
                                             name="btnBaixar"
-                                            // htmlType="submit"
+                                            htmlType="submit"
                                             loading={loadingBaixar}
                                             onClick={() => {
                                                 onClickSubmit(),
@@ -761,8 +770,8 @@ const ValidaSignReceita = ({ match }) => {
                                             color="cyan"
                                             variant="solid"
                                             htmlType="submit"
-                                            loading={loadingQRCode}
                                             onClick={() => setAcaoBotao(5)}
+                                            loading={loadingValidaITI}
                                         >
                                             <QrcodeOutlined
                                                 style={{ fontSize: "20px" }}

@@ -1,3 +1,8 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
 .background-full {
     background-color: #0a2556b8;
     min-height: 100vh;
@@ -30,9 +35,27 @@
 }
 
 .ant-steps-item-title {
-  font-size: 0.1rem; /* Adjust font size as needed */
+    font-size: 0.1rem; /* Adjust font size as needed */
 }
 
 .ant-steps-item {
-  width: 650px; /* Adjust width as needed */
+    width: 650px; /* Adjust width as needed */
+}
+
+.step-titles {
+    display: block;
+    font-size: 0.75rem;
+    line-height: 2;
+    width: 440px;
+    justify-items: stretch;
+}
+
+@media (max-width: 896px) {
+    .step-titles {
+        display: block;
+        font-size: 0.8rem;
+        line-height: 2;
+        width: 325px;
+        justify-items: stretch;
+    }
 }

@@ -34,7 +34,7 @@ import amparaLogo from "../../images/ampara-logo-transparente.png";
 import {
     NOME_SISTEMA,
     PATH_PDF_RECEITA,
-    SITE_VALIDADOR_ITI,
+    URL_VALIDADOR_ITI,
     VERSAO_SISTEMA,
 } from "../../helpers/Constants";
 
@@ -58,6 +58,7 @@ const ValidaSignReceita = ({ match }) => {
     const [exibeModalValidacao, setExibeModalValidacao] = useState(false);
     const [exibeModalQrCode, setExibeModalQrCode] = useState(false);
     const [qrCodeValue, setQrCodeValue] = useState("");
+    const [codAcessoQRCode, setCodAcessoQRCode] = useState("");
 
     const [form] = Form.useForm();
     const [pdfUrl, setPdfUrl] = useState("");
@@ -89,7 +90,7 @@ const ValidaSignReceita = ({ match }) => {
         } else if (acaoBotao === 3) {
             await copiarLinkArquivoPDF(value.token);
         } else if (acaoBotao === 4) {
-            await mostraQRCodeReceitaPDF(value.token);
+            await exibirQRCodeReceitaPDF(value.token);
         } else if (acaoBotao === 5) {
             await redirecionaValidaITI();
         }
@@ -100,16 +101,14 @@ const ValidaSignReceita = ({ match }) => {
         setLoadingValidaITI(true);
 
         const timer = setTimeout(() => {
-            window.location.href = SITE_VALIDADOR_ITI;
-        }, 2000); // 5000 milliseconds = 10 seconds
+            window.open(URL_VALIDADOR_ITI, "_blank");
+        }, 2000); // 2000 milliseconds = 2 seconds
 
-       //setLoadingValidaITI(false);
-        // Cleanup function to clear the timeout if the component unmounts
         return () => clearTimeout(timer);
     };
 
     // Busca FastReport MemoStream da Receita
-    const mostraQRCodeReceitaPDF = async (token = "") => {
+    const exibirQRCodeReceitaPDF = async (token = "") => {
         setAlertMessageFalha("");
         setExibeModalQrCode(false);
         setLoadingQRCode(true);
@@ -130,7 +129,8 @@ const ValidaSignReceita = ({ match }) => {
                         } else {
                             setLoadingQRCode(false);
 
-                            setQrCodeValue(data);
+                            setQrCodeValue(data.url);
+                            setCodAcessoQRCode(data.codAcesso);
 
                             setExibeModalQrCode(true);
 
@@ -374,16 +374,33 @@ const ValidaSignReceita = ({ match }) => {
                 />
             )}
 
-            {/* Modal de Validação de Assinatura */}
+            {/* Modal de Copia URL de Assinatura */}
             <Modal
-                width={650}
+                icon={LinkOutlined}
+                width={500}
                 centered={true}
                 title={
-                    <span style={{ fontSize: "1.2rem" }}>
-                        {" "}
-                        {<LinkOutlined />} INSTRUÇÕES PARA VALIDAR ASSINATURA
-                        DIGITAL POR URL{" "}
-                    </span>
+                    <div
+                        style={{
+                            display: "flex",
+                            fontSize: "2.3rem",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <LinkOutlined />
+                        <div />
+                        <span
+                            style={{
+                                marginLeft: 10,
+                                fontSize: ".8rem",
+                                textAlign: "center",
+                            }}
+                        >
+                            {" "}
+                            INSTRUÇÕES PARA VALIDAÇÃO DA <br /> ASSINATURA
+                            DIGITAL POR URL
+                        </span>
+                    </div>
                 }
                 open={exibeModalValidacao}
                 // onOk={() =>
@@ -392,48 +409,50 @@ const ValidaSignReceita = ({ match }) => {
                 // }
                 // onCancel={() => setExibeModalValidacao(false)}
                 footer={[
-                    <Button
-                        key="cancel"
-                        onClick={() => setExibeModalValidacao(false)}
-                    >
-                        Cancelar
-                    </Button>,
-                    <Button
-                        key="submit"
-                        type="primary"
-                        onClick={() =>
-                            (window.location.href =
-                                "https://validar.iti.gov.br/index.html")
-                        }
-                    >
-                        Continuar
-                    </Button>,
+                    <>
+                        <hr style={{ marginBottom: 10 }} />
+                        <Button
+                            key="cancel"
+                            onClick={() => setExibeModalValidacao(false)}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            key="submit"
+                            type="primary"
+                            onClick={() =>
+                                window.open(URL_VALIDADOR_ITI, "_blank")
+                            }
+                        >
+                            Continuar
+                        </Button>
+                    </>
                 ]}
             >
-                <hr />
-
                 <p
                     style={{
-                        fontSize: "1rem",
+                        fontSize: ".8rem",
                         fontWeight: 500,
                         color: "#892929ff",
                         textAlign: "center",
+                        padding: 5,
                     }}
                 >
                     Leia com Atenção todos os itens abaixo antes de clicar no
                     botão Continuar
                 </p>
 
+                <hr />
                 <Steps
-                    style={{ fontSize: "0.5rem" }}
+                    style={{ fontSize: "0.5rem", marginRight: 5 }}
                     progressDot
                     current={4}
                     direction="vertical"
                     items={[
                         {
                             title: (
-                                <span style={{ fontSize: "0.9rem" }}>
-                                    Ao clicar no botão [ <b>Continuar</b> ] você
+                                <span className="step-titles">
+                                    Acionando no botão [ <b>Continuar</b> ] você
                                     será redirecionado ao site oficial de
                                     validação de assintaturas.
                                 </span>
@@ -441,7 +460,7 @@ const ValidaSignReceita = ({ match }) => {
                         },
                         {
                             title: (
-                                <span style={{ fontSize: "0.9rem" }}>
+                                <span className="step-titles">
                                     Após ser redirecionado, localize na pagina e
                                     selecione a opção ( Colar URL ).
                                 </span>
@@ -449,7 +468,7 @@ const ValidaSignReceita = ({ match }) => {
                         },
                         {
                             title: (
-                                <span style={{ fontSize: "0.9rem" }}>
+                                <span className="step-titles">
                                     Na caixa de digitação tecle [ <b>Ctrl+V</b>{" "}
                                     ] para colar a URL, em seguida clique no
                                     botão [ <b>Enviar</b> ].
@@ -458,7 +477,7 @@ const ValidaSignReceita = ({ match }) => {
                         },
                         {
                             title: (
-                                <span style={{ fontSize: "0.9rem" }}>
+                                <span className="step-titles">
                                     Localize na página a expressão{" "}
                                     <span
                                         style={{
@@ -474,7 +493,7 @@ const ValidaSignReceita = ({ match }) => {
                         },
                         {
                             title: (
-                                <span style={{ fontSize: "0.9rem" }}>
+                                <span className="step-titles">
                                     No caso de{" "}
                                     <span
                                         style={{
@@ -482,7 +501,7 @@ const ValidaSignReceita = ({ match }) => {
                                             fontWeight: 500,
                                         }}
                                     >
-                                        Assinatura Inválida{" "}
+                                        Assinatura Reprovada{" "}
                                     </span>
                                     , comunique ao Paciente que o mesmo deverá
                                     solicitar
@@ -501,7 +520,7 @@ const ValidaSignReceita = ({ match }) => {
             {/* Modal QRCode */}
             <Modal
                 style={{ padding: 5 }}
-                width={350}
+                width={330}
                 centered={true}
                 title="QRCode"
                 open={exibeModalQrCode}
@@ -515,13 +534,41 @@ const ValidaSignReceita = ({ match }) => {
                         justifyContent: "center",
                     }}
                 >
-                    <Space direction="horizontal" align="center">
-                        <QRCode
-                            level="H"
-                            size={200}
-                            value={qrCodeValue || "-"}
-                        />
-                    </Space>
+                    <div style={{ display: "block", textAlign: "center" }}>
+                        <Space direction="horizontal" align="center">
+                            <QRCode
+                                level="H"
+                                size={200}
+                                value={qrCodeValue || "-"}
+                            />
+                        </Space>
+                        <Space
+                            style={{
+                                display: "flex",
+                                // color: "#0712b4ff",
+                                fontWeight: 500,
+                                border: "0.5px solid #8c8a8aff",
+                                borderRadius: 5,
+                                padding: 3,
+                                fontSize: "0.8rem",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <div>
+                                {" "}
+                                Cód.Scaneado:{" "}
+                                <span
+                                    style={{
+                                        marginLeft: 3,
+                                        fontSize: "1.2rem",
+                                        color: "#0712b4ff",
+                                    }}
+                                >
+                                    {codAcessoQRCode}
+                                </span>
+                            </div>
+                        </Space>
+                    </div>
                 </div>
             </Modal>
 
@@ -546,7 +593,7 @@ const ValidaSignReceita = ({ match }) => {
                             <span
                                 style={{
                                     color: "#003f78",
-                                    marginTop: "2px",
+                                    marginTop: 2,
                                     fontWeight: 500,
                                     fontSize: "0.85rem",
                                 }}
@@ -581,10 +628,11 @@ const ValidaSignReceita = ({ match }) => {
                                                 textAlign: "center",
                                                 color: "#ee4141fc",
                                                 fontWeight: 500,
+                                                marginTop: 5,
                                             }}
                                         >
                                             {alertMessageFalha}
-                                            <hr />
+                                            <hr style={{ marginTop: 5 }} />
                                         </div>
                                     )}
 
@@ -603,6 +651,7 @@ const ValidaSignReceita = ({ match }) => {
                                                 display: "flex",
                                                 justifyContent: "center",
                                                 alignItems: "center",
+                                                marginTop: 15,
                                             }}
                                             rules={[
                                                 {
@@ -668,7 +717,7 @@ const ValidaSignReceita = ({ match }) => {
                                                 style={{
                                                     color: "#9c0306ff",
                                                     fontSize: "0.9rem",
-                                                    marginTop: 37,
+                                                    marginTop: 50,
                                                     border: 0,
                                                     textAlign: "center",
                                                     justifyContent: "center",

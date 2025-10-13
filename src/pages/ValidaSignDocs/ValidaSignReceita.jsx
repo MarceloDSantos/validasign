@@ -21,6 +21,8 @@ import {
     LinkOutlined,
     QrcodeOutlined,
     SignatureFilled,
+    GlobalOutlined,
+    CopyOutlined
 } from "@ant-design/icons";
 import {
     CustomValidations,
@@ -100,9 +102,11 @@ const ValidaSignReceita = ({ match }) => {
         setAlertMessageFalha("");
         setLoadingValidaITI(true);
 
-        const timer = setTimeout(() => {
-            window.open(URL_VALIDADOR_ITI, "_blank");
+        const timer = setTimeout(async ()  => {
+            await window.open(URL_VALIDADOR_ITI, "_blank");
+                    setLoadingValidaITI(false);
         }, 2000); // 2000 milliseconds = 2 seconds
+
 
         return () => clearTimeout(timer);
     };
@@ -407,7 +411,7 @@ const ValidaSignReceita = ({ match }) => {
                 //     (window.location.href =
                 //         "https://validar.iti.gov.br/index.html")
                 // }
-                // onCancel={() => setExibeModalValidacao(false)}
+                onCancel={() => setExibeModalValidacao(false)}
                 footer={[
                     <>
                         <hr style={{ marginBottom: 10 }} />
@@ -415,18 +419,19 @@ const ValidaSignReceita = ({ match }) => {
                             key="cancel"
                             onClick={() => setExibeModalValidacao(false)}
                         >
-                            Cancelar
+                            Voltar
                         </Button>
                         <Button
                             key="submit"
                             type="primary"
-                            onClick={() =>
-                                window.open(URL_VALIDADOR_ITI, "_blank")
-                            }
+                            onClick={() => {
+                                window.open(URL_VALIDADOR_ITI, "_blank");
+                                setExibeModalValidacao(false);
+                            }}
                         >
                             Continuar
                         </Button>
-                    </>
+                    </>,
                 ]}
             >
                 <p
@@ -539,6 +544,7 @@ const ValidaSignReceita = ({ match }) => {
                             <QRCode
                                 level="H"
                                 size={200}
+                                icon="src\images\ampara-logo-transparente.png"
                                 value={qrCodeValue || "-"}
                             />
                         </Space>
@@ -805,7 +811,7 @@ const ValidaSignReceita = ({ match }) => {
                                             loading={loadingURL}
                                             onClick={() => setAcaoBotao(3)}
                                         >
-                                            <LinkOutlined
+                                            <CopyOutlined
                                                 style={{ fontSize: "20px" }}
                                             />
                                             Copiar URL da Assinatura Digital
@@ -822,7 +828,7 @@ const ValidaSignReceita = ({ match }) => {
                                             onClick={() => setAcaoBotao(5)}
                                             loading={loadingValidaITI}
                                         >
-                                            <QrcodeOutlined
+                                            <GlobalOutlined
                                                 style={{ fontSize: "20px" }}
                                             />
                                             Validador I.T.I.

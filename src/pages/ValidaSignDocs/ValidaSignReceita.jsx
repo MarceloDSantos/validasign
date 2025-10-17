@@ -35,7 +35,6 @@ import api from "../../api";
 import amparaLogo from "../../images/ampara-logo-transparente.png";
 import {
     NOME_SISTEMA,
-    PATH_PDF_RECEITA,
     URL_VALIDADOR_ITI,
     VERSAO_SISTEMA,
 } from "../../helpers/Constants";
@@ -544,7 +543,7 @@ const ValidaSignReceita = ({ match }) => {
                             <QRCode
                                 level="H"
                                 size={200}
-                                icon="src\images\ampara-logo-transparente.png"
+                                icon="/favicon.ico"
                                 value={qrCodeValue || "-"}
                             />
                         </Space>
